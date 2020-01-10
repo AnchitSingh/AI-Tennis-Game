@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Anchit's Game</title>
+	<style type="text/css">
+	    body
+	    {
+	    	margin: 0px;
+	    	padding: 0px;
+	    	background:linear-gradient(to right,#FF8008,#FFC837);
+	    	font-family: cursive;
+	    	color: yellow;
+	    	font-size: 250%;
+	    	text-shadow: 2px 2px 4px red;
+	    }
+		#game
+		{
+			width: 800px;
+			height: 600px;
+			position: relative;
+			top: -50px;
+			left: 350px;
+		}
+		#name
+		{
+			position: relative;
+			left:450px;
+			top: -30px;
+		}
+	</style>
+</head>
+
+<body>
+	<h1 id="name">ANCHIT's GAME</h1>
+	<div id="game">
+	<canvas id="game-canvas" width="900" height="550" ></canvas></div>
+	<script type="text/javascript">
+		var canvaS;
+		var canvasContext;
+		var ballX=50;
+		var ballspeedX=10;
+		var ballY=50;
+		var ballspeedY=5;
+		var paddle1Y=250;
+		var paddle2Y=250;
+		var PADDLE_HEIGHT=100;
+		var player1score=0;
+		var player2score=0;
+		var showingWinner=false;
+		var hardness=prompt("Enter Game's Hardness Level(0,13)","2");
+		alert("About Game.\n1. You have score 7 points, earlier than Artificial Intelligent program to win.\n2. Try different hardness level to test your speed and accuracy\n3. The game is the latest version till now.\n                                                       -by ANCHIT SINGH. ");
+		var winningScore=6;
+		var PADDLE_THICKNESS=7;
+		var sound= new Audio("audio.wav");
+		var back= new Audio("back.mp3");
+
+
+function calculateMousePos(evt) {
+	var rect = canvas.getBoundingClientRect();
+	var root = document.documentElement;
+	var mouseX = evt.clientX - rect.left - root.scrollLeft;
+	var mouseY = evt.clientY - rect.top - root.scrollTop;
+	return {
+		x:mouseX,
+		y:mouseY
+	};
+}
+function handleMouseClick(evt){
+	if(showingWinner){
+		player1score=0;
+		player2score=0;
+		showingWinner=false;
+	}
+}
+		window.onload=function()
+		{
+			canvas=document.getElementById("game-canvas");
+			canvasContext=canvas.getContext("2d");
+			var framesPerSecond=30+hardness*10;
+			setInterval(function(){
+			moveEverything();
+			drawEverything();
+		  },1000/framesPerSecond);
+			canvas.addEventListener('mousemove',
+		function(evt) {
+			var mousePos = calculateMousePos(evt);
+			paddle1Y = mousePos.y - (PADDLE_HEIGHT/2);
+		});
+			canvas.addEventListener("mousedown",handleMouseClick);
+        }
+        function computerMovement(){
+        	var paddle2Ycenter=paddle2Y+(PADDLE_HEIGHT/2);
+        	if(paddle2Ycenter<(ballY-25))
+        	{
+			   if(hardness>=9){
+        		paddle2Y+=10;}
+				else{
+				paddle2Y+=6;}
+        	}
+        	else if(paddle2Ycenter>(ballY+25))
+        	{
+        	    if(hardness>=9){
+        		paddle2Y-=10;}
+				else{
+				paddle2Y-=6;}	
+        	}
+        }
+		function moveEverything()
+		{
+			if(showingWinner)
+			{
+				return;
+			}
+			computerMovement();
+			ballX=ballX+ballspeedX;
+			ballY=ballY+ballspeedY;
+			if(ballY>=canvas.height)
+			{
+				ballspeedY=-ballspeedY;
+			}
+			if(ballY<0)
+			{
+				ballspeedY=-ballspeedY;
+			}
+			if(ballX>=canvas.width)
+			{
+				if(ballY>paddle2Y&&ballY<paddle2Y+PADDLE_HEIGHT){
+					ballspeedX=-ballspeedX;
+					var delta2=ballY-(paddle2Y+PADDLE_HEIGHT/2);
+					ballspeedY=delta2*0.20;
+					sound.currentTime=0;
+					sound.play();
+				}
+				else{
+					player1score++;
+					ballReset();
+				}
+			}
+			if(ballX<0)
+			{
+				if(ballY>paddle1Y&&ballY<paddle1Y+PADDLE_HEIGHT){
+					ballspeedX=-ballspeedX;
+					var delta1=ballY-(paddle1Y+PADDLE_HEIGHT/2);
+					ballspeedY=delta1*0.20;
+					sound.currentTime=0;
+					sound.play();
+				}
+				else{
+					player2score++;
+					ballReset();
+				}
+			}
+		}
+		function drawNet(){
+			for(var i=0;i<canvas.height;i+=40){
+				colorRect(canvas.width/2-1,i,2,20,"silver");
+			}
+
+		}
+		function drawEverything()
+		{
+			back.play();
+			if(showingWinner)
+			{
+				var c=document.getElementById("game-canvas");
+          var ctx=c.getContext("2d");
+          ctx.font="30px cursive";
+				if (player1score>player2score) {
+					canvasContext.font="30px cursive";
+				canvasContext.fillText("You Wins. Click to continue",canvas.width/4,canvas.height/2);
+				return;
+			}
+			else {
+				var c=document.getElementById("game-canvas");
+        var ctx=c.getContext("2d");
+        ctx.font="30px cursive";
+				canvasContext.fillText("Player2 Wins. Click to continue",canvas.width/4,canvas.height/2);
+				return;
+			}
+			}
+			colorRect(0,0,canvas.width,canvas.height,"black");
+			drawNet();
+			colorRect(0,paddle1Y,PADDLE_THICKNESS,PADDLE_HEIGHT,'white');
+
+			colorRect(canvas.width-PADDLE_THICKNESS,paddle2Y, 
+				       PADDLE_THICKNESS,PADDLE_HEIGHT,'white');
+
+			makeCircle(ballX,ballY,10,"yellow");
+			canvasContext.font="30px cursive";
+			canvasContext.fillText(player1score,100,100);
+			canvasContext.fillText(player2score,canvas.width-100,100);
+		}
+		function ballReset(){
+			if(player1score>winningScore||player2score>winningScore)
+			{
+				showingWinner=true;
+			}
+			ballspeedX=-ballspeedX;
+			ballX=canvas.width/2;
+			ballY=(canvas.height/2)*Math.random();
+
+		}
+		function makeCircle(X,Y,r,color)
+		{
+			canvasContext.fillStyle=color;
+			canvasContext.beginPath();
+			canvasContext.arc(X,Y,r,0,Math.PI*2,true);
+			canvasContext.fill();
+		}
+		function colorRect(leftX,topY,width,height,color)
+		{
+			canvasContext.fillStyle=color;
+			canvasContext.fillRect(leftX,topY,width,height,color);
+		}
+	</script>
+</body>
+</html>
